@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<body>
+  <div class="layui-fluid">
+    <div class="layui-row layui-col-space15">
+      <div class="layui-col-md12">
+        <div class="layui-card">
+          <div class="layui-card-header">个人信息修改</div>
+          <div class="layui-card-body">
+            <div class="layui-form" lay-filter="">
+              <!-- 第一行：姓名、昵称、年龄 -->
+              <div class="layui-form-item layui-row">
+                <div class="layui-col-md4">
+                  <label class="layui-form-label">姓名</label>
+                  <div class="layui-input-block">
+                    <input type="text" name="user_name" class="layui-input" value="{{ user_obj.user_name }}">
+                  </div>
+                </div>
+                <div class="layui-col-md4">
+                  <label class="layui-form-label">昵称</label>
+                  <div class="layui-input-block">
+                    <input type="text" name="nickname" class="layui-input" value="{{ user_obj.nickname|default:'' }}">
+                  </div>
+                </div>
+                <div class="layui-col-md4">
+                  <label class="layui-form-label">年龄</label>
+                  <div class="layui-input-block">
+                    <input type="number" name="age" class="layui-input" value="{{ user_obj.age|default:'' }}">
+                  </div>
+                </div>
+              </div>
+              <!-- 第二行：学校、专业、绩点 -->
+              <div class="layui-form-item layui-row">
+                <div class="layui-col-md4">
+                  <label class="layui-form-label">学校</label>
+                  <div class="layui-input-block">
+                    <input type="text" name="school" class="layui-input" value="{{ user_obj.school|default:'' }}">
+                  </div>
+                </div>
+                <div class="layui-col-md4">
+                  <label class="layui-form-label">专业</label>
+                  <div class="layui-input-block">
+                    <input type="text" name="major" class="layui-input" value="{{ user_obj.major|default:'' }}">
+                  </div>
+                </div>
+                <div class="layui-col-md4">
+                  <label class="layui-form-label">绩点</label>
+                  <div class="layui-input-block">
+                    <input type="text" name="gpa" class="layui-input" value="{{ user_obj.gpa|default:'' }}">
+                  </div>
+                </div>
+              </div>
+              <!-- 专业技能 -->
+              <div class="layui-form-item">
+                <label class="layui-form-label">专业技能</label>
+                <div class="layui-input-block">
+                  <textarea name="professional_skills" class="layui-textarea" rows="5">{{ user_obj.professional_skills|default:'' }}</textarea>
+                </div>
+              </div>
+              <!-- 竞赛荣誉 -->
+              <div class="layui-form-item">
+                <label class="layui-form-label">竞赛荣誉</label>
+                <div class="layui-input-block">
+                  <textarea name="competition_honors" class="layui-textarea" rows="5">{{ user_obj.competition_honors|default:'' }}</textarea>
+                </div>
+              </div>
+              <!-- 校园经历 -->
+              <div class="layui-form-item">
+                <label class="layui-form-label">校园经历</label>
+                <div class="layui-input-block">
+                  <textarea name="school_position" class="layui-textarea" rows="5">{{ user_obj.school_position|default:'' }}</textarea>
+                </div>
+              </div>
+              <!-- 确认修改按钮 -->
+              <div class="layui-form-item">
+                <div class="layui-input-block">
+                  <button class="layui-btn" lay-submit lay-filter="up_info" id="up_info">确认修改</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+{% endblock %}
+
+{% block js %}
+  <script>
+    layui.config({
+      base: '{% static "layuiadmin/" %}' //静态资源所在路径
+    }).extend({
+      index: 'lib/index' //主入口模块
+    }).use(['index', 'form'], function () {
+      var $ = layui.$,
+        layer = layui.layer,
+        form = layui.form;
+
+      form.on('submit(up_info)', function (data) {
+        var field = data.field;
+        console.log(field);
+
+        // 前端验证
+        if (field.user_name === "") {
+          layer.msg("姓名不能为空！");
+          return false;
+        }
+
+        // 发送 AJAX 请求
+        $.ajax({
+          type: 'POST',
+          url: '/update_user_info/',
+          data: {
+            "user_name": field.user_name,
+            "age": field.age,
+            "school": field.school,
+            "major": field.major,
+            "gpa": field.gpa,
+            "professional_skills": field.professional_skills,
+            "competition_honors": field.competition_honors,
+            'school_position': field.school_position,
+            "csrfmiddlewaretoken": $('input[name=csrfmiddlewaretoken]').val() // 添加 CSRF 令牌
+          },
+          success: function (res) {
+            if (res.Code === 0) {
+              layer.msg(res.msg, { icon: 1, time: 2000 }, function () {
+                // 可以在这里添加跳转逻辑，比如跳转到个人信息页面
+              });
+            } else {
+              layer.msg(res.msg, { icon: 2 });
+            }
+          },
+          error: function (response) {
+            layer.msg('请求出错，请稍后重试！', { icon: 2 });
+          }
+        });
+
+        return false; // 阻止表单默认提交
+      });
+    });
+  </script>
+{% endblock %}
