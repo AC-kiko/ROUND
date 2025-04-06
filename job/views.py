@@ -236,30 +236,6 @@ def send_job(request):
         return JsonResponse({"Code": 0, "msg": "操作成功"})
 
 
-def job_expect(request):
-    if request.method == "POST":
-        job_name = request.POST.get("key_word")
-        city = request.POST.get("city")
-        ret = models.UserExpect.objects.filter(user=request.session.get("user_id"))
-        # print(ret)
-        if ret:
-            ret.update(key_word=job_name, place=city)
-        else:
-            user_obj = models.UserList.objects.filter(user_id=request.session.get("user_id")).first()
-            models.UserExpect.objects.create(user=user_obj, key_word=job_name, place=city)
-        return JsonResponse({"Code": 0, "msg": "操作成功"})
-    else:
-        ret = models.UserExpect.objects.filter(user=request.session.get("user_id")).values()
-        print(ret)
-        if len(ret) != 0:
-            keyword = ret[0]['key_word']
-            place = ret[0]['place']
-        else:
-            keyword = ''
-            place = ''
-        return render(request, "expect.html", locals())
-
-
 def get_recommend(request):
     recommend_list = job_recommend.recommend_by_item_user(request.session.get("user_id"), 9)
     print(recommend_list)
@@ -367,3 +343,46 @@ def change_status(request):
         status = request.POST.get("status")
         models.SendList.objects.filter(user_id=user_id, job_id=job_id).update(status=status)
         return JsonResponse({"Code": 0, "msg": "操作成功"})
+
+import re
+from django.http import JsonResponse
+from .models import JobData
+
+def job_expect(request):
+    if request.method == "POST":
+        job_name = request.POST.get("key_word")
+        city = request.POST.get("city")
+        ret = models.UserExpect.objects.filter(user=request.session.get("user_id"))
+        # print(ret)
+        if ret:
+            ret.update(key_word=job_name, place=city)
+        else:
+            user_obj = models.UserList.objects.filter(user_id=request.session.get("user_id")).first()
+            models.UserExpect.objects.create(user=user_obj, key_word=job_name, place=city)
+        return JsonResponse({"Code": 0, "msg": "操作成功"})
+    else:
+        ret = models.UserExpect.objects.filter(user=request.session.get("user_id")).values()
+        print(ret)
+        if len(ret) != 0:
+            keyword = ret[0]['key_word']
+            place = ret[0]['place']
+        else:
+            keyword = ''
+            place = ''
+        return render(request, "expect.html", locals())
+
+def get_city_job_count(request):
+    # 获取所有城市的职位数据
+    job_data = JobData.objects.all()
+    city_count = {}
+    for job in job_data:
+        if job.place:
+            # 简单处理，假设地点是单一城市名称
+            city = job.place.split()[0]
+            if city in city_count:
+                city_count[city] += 1
+            else:
+                city_count[city] = 1
+    # 转换为 Echarts 所需的格式
+    data = [{"name": city, "value": count} for city, count in city_count.items()]
+    return JsonResponse({"data": data})

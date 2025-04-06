@@ -16,7 +16,9 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, re_path
 from job import views
-
+from django.urls import path
+from job.views import job_list, get_city_job_count  # 导入新的视图函数
+from django.views.generic import TemplateView
 urlpatterns = [
     path('admin/', admin.site.urls),
     re_path('^$', views.login),
@@ -47,4 +49,10 @@ urlpatterns = [
     path('update_password/', views.update_password, name='update_password'),
 
     path('change_status/', views.change_status, name='change_status'),
+
+
+    path('job_list/', job_list, name='job_list'),
+    path('map/', TemplateView.as_view(template_name='map.html'), name='map'),
+    path('get_city_job_count/', get_city_job_count, name='get_city_job_count'),  # 新增 URL 模式
+
 ]
