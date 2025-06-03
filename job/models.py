@@ -33,24 +33,15 @@ class JobData(models.Model):
         verbose_name_plural = "招聘信息"
 
 
-from django.db import models
-
 class SendList(models.Model):
     send_id = models.AutoField(primary_key=True)
-    job = models.ForeignKey('JobData', models.DO_NOTHING, blank=True, null=True)
+    job = models.ForeignKey(JobData, models.DO_NOTHING, blank=True, null=True)
     user = models.ForeignKey('UserList', models.DO_NOTHING, blank=True, null=True)
-    # 新增投递状态字段
-    STATUS_CHOICES = (
-        ('pending', '待处理'),
-        ('written_test', '笔试'),
-        ('first_interview', '一面'),
-        ('second_interview', '二面'),
-    )
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
 
     class Meta:
         managed = True
         db_table = 'send_list'
+
 
 class SpiderInfo(models.Model):
     spider_id = models.AutoField(primary_key=True)
@@ -79,14 +70,6 @@ class UserList(models.Model):
     user_id = models.CharField('用户ID', primary_key=True, max_length=11)  # 用户ID，主键
     user_name = models.CharField('用户名', max_length=255, blank=True, null=True)  # 用户名
     pass_word = models.CharField('密码', max_length=255, blank=True, null=True)  # 密码
-    grade = models.CharField('年级', max_length=255, blank=True, null=True)  # 年级
-    school = models.CharField('学校', max_length=255, blank=True, null=True)  # 学校
-    major = models.CharField('专业', max_length=255, blank=True, null=True)  # 专业
-    gpa = models.FloatField('绩点', blank=True, null=True)  # 绩点
-    age = models.IntegerField('年龄',blank=True, null=True) # 年龄
-    professional_skills = models.TextField('专业技能', blank=True, null=True)  # 专业技能
-    competition_honors = models.TextField('竞赛荣誉', blank=True, null=True)  # 竞赛荣誉
-    school_position = models.TextField('校园经历', blank=True, null=True)  # 校园经历
 
     class Meta:
         managed = True  # 是否由Django管理

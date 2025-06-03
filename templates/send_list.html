@@ -1,74 +1,55 @@
+
 {% extends "base.html" %}
 {% load static %}
 {% block content %}
 <body>
+
   <div class="layui-fluid">
     <div class="layui-card">
       <div class="layui-card-body">
-        <table id="LAY-app-forum-list" lay-filter="LAY-app-forum-list"></table>
-        {% verbatim %}
-        <script type="text/html" id="table-forum-list">
-            {{#  if(d.send_key == 0){ }}
-            <a class="layui-btn layui-btn-sm layui-btn-sm" lay-event="send"><i class="layui-icon layui-icon-add-circle-fine"></i>投递</a>
-            {{#  } else { }}
-            <a class="layui-btn layui-btn-sm layui-btn-normal" lay-event="send_1">取消投递</a>
-            <select name="status" lay-filter="status_{{d.job_id}}">
-                <option value="pending" {{ d.status === 'pending' ? 'selected' : '' }}>待处理</option>
-                <option value="written_test" {{ d.status === 'written_test' ? 'selected' : '' }}>笔试</option>
-                <option value="first_interview" {{ d.status === 'first_interview' ? 'selected' : '' }}>一面</option>
-                <option value="second_interview" {{ d.status === 'second_interview' ? 'selected' : '' }}>二面</option>
-            </select>
-            <a class="layui-btn layui-btn-sm layui-btn-primary" lay-event="change_status_{{d.job_id}}">更改状态</a>
-            {{#  } }}
-        </script>
-        {% endverbatim %}
+          <table id="LAY-app-forum-list" lay-filter="LAY-app-forum-list"></table>
+          {% verbatim %}
+            <script type="text/html" id="table-forum-list">
+               {{#  if(d.send_key == 0){ }}
+              <a class="layui-btn layui-btn-sm layui-btn-sm" lay-event="send"><i class="layui-icon layui-icon-add-circle-fine"></i>投递</a>
+               {{#  } else { }}
+              <a class="layui-btn layui-btn-sm layui-btn-normal" lay-event="send_1">取消投递</a>
+               {{#  } }}
+            </script>
+          {% endverbatim %}
       </div>
     </div>
   </div>
-</body>
+  </body>
 {% endblock %}
+
 {% block js %}
-<script>
+  <script>
   layui.config({
     base: '{% static "layuiadmin/" %}' //静态资源所在路径
   }).extend({
     index: 'lib/index' //主入口模块
-  }).use(['index', 'send_list', 'table'], function () {
-    var $ = layui.$
-      , form = layui.form
-      , table = layui.table;
+  }).use(['index', 'send_list', 'table'], function() {
+      var $ = layui.$
+          , form = layui.form
+          , table = layui.table;
 
-    //执行重载
-    table.reload('LAY-app-forum-list', {
-      page: { curr: 1 },
-      where: field
-    });
+
+          //执行重载
+          table.reload('LAY-app-forum-list', {
+              page:{curr:1},
+              where: field
+          });
   });
 
   function notNumber(val) {
     var regPos = /^\d+(\.\d+)?$/; //非负浮点数
     var regNeg = /^(-(([0-9]+\.[0-9]*[1-9][0-9]*)|([0-9]*[1-9][0-9]*\.[0-9]+)|([0-9]*[1-9][0-9]*)))$/; //负浮点数
-    if (regPos.test(val) || regNeg.test(val)) {
-      return false;
-    } else {
-      return true;
+    if(regPos.test(val) || regNeg.test(val)) {
+        return false;
+        } else {
+        return true;
+        }
     }
-  }
-
-  function updateStatus(job_id) {
-    var status = $('#status_' + job_id).val();
-    $.ajax({
-      type: 'POST',
-      data: { "job_id": job_id, "status": status },
-      url: '/update_job_status/',
-      success: function (res) {
-        layer.msg(res.msg);
-        location.reload()
-      },
-      error: function (response) {
-        layer.msg(response.msg);
-      }
-    });
-  }
-</script>
+  </script>
 {% endblock %}

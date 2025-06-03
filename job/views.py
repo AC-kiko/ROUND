@@ -7,6 +7,7 @@ from psutil import *
 from numpy import *
 from job import tools
 from job import job_recommend
+
 spider_code = 0  # 定义全局变量，用来识别爬虫的状态，0空闲，1繁忙
 
 
@@ -111,12 +112,15 @@ def start_spider(request):
         city = request.POST.get("city")
         page = request.POST.get("page")
         role = request.POST.get("role")
+        spider_code = 1  # 改变爬虫状态
         spider_model = models.SpiderInfo.objects.filter(spider_id=1).first()
         # print(spider_model)
         spider_model.count += 1  # 给次数+1
         spider_model.page += int(page)  # 给爬取页数加上选择的页数
         spider_model.save()
-        spider_code = tools.spider_engine_choice(engine_id=role,key_word=key_word, city=city, all_page=page) # 调用tools.py进行爬虫（网站id，搜索关键词，城市，页数）
+        if role == '猎聘网':
+            # print(key_word,city,page)
+            spider_code = tools.lieSpider(key_word=key_word, city=city, all_page=page)
         return JsonResponse({"code": 0, "msg": "爬取完毕!"})
     else:
         return JsonResponse({"code": 1, "msg": "请使用POST请求"})
@@ -236,8 +240,32 @@ def send_job(request):
         return JsonResponse({"Code": 0, "msg": "操作成功"})
 
 
+def job_expect(request):
+    if request.method == "POST":
+        job_name = request.POST.get("key_word")
+        city = request.POST.get("city")
+        ret = models.UserExpect.objects.filter(user=request.session.get("user_id"))
+        # print(ret)
+        if ret:
+            ret.update(key_word=job_name, place=city)
+        else:
+            user_obj = models.UserList.objects.filter(user_id=request.session.get("user_id")).first()
+            models.UserExpect.objects.create(user=user_obj, key_word=job_name, place=city)
+        return JsonResponse({"Code": 0, "msg": "操作成功"})
+    else:
+        ret = models.UserExpect.objects.filter(user=request.session.get("user_id")).values()
+        print(ret)
+        if len(ret) != 0:
+            keyword = ret[0]['key_word']
+            place = ret[0]['place']
+        else:
+            keyword = ''
+            place = ''
+        return render(request, "expect.html", locals())
+
+
 def get_recommend(request):
-    recommend_list = job_recommend.recommend_by_item_user(request.session.get("user_id"), 9)
+    recommend_list = job_recommend.recommend_by_item_id(request.session.get("user_id"), 9)
     print(recommend_list)
     return render(request, "recommend.html", locals())
 
@@ -246,70 +274,33 @@ def send_page(request):
     return render(request, "send_list.html")
 
 
-from django.http import JsonResponse
-from . import models
-
 def send_list(request):
     send_list = list(models.JobData.objects.filter(sendlist__user=request.session.get("user_id")).values())
     for send in send_list:
-        send_obj = models.SendList.objects.filter(user_id=request.session.get("user_id"), job_id=send['job_id']).first()
         send['send_key'] = 1
-        send['status'] = send_obj.status if send_obj else 'pending'
     if len(send_list) == 0:
         return JsonResponse({"code": 1, "msg": "没找到需要查询的数据！", "count": "{}".format(len(send_list)), "data": []})
     else:
         return JsonResponse({"code": 0, "msg": "success", "count": "{}".format(len(send_list)), "data": send_list})
-def update_user_info(request):
+
+
+def pass_page(request):
+    user_obj = models.UserList.objects.filter(user_id=request.session.get("user_id")).first()
+    return render(request, "pass_page.html", locals())
+
+
+def up_info(request):
     if request.method == "POST":
         user_name = request.POST.get("user_name")
-        age = request.POST.get("age")
-        school = request.POST.get("school")
-        major = request.POST.get("major")
-        gpa = request.POST.get("gpa")
-        professional_skills = request.POST.get("professional_skills")
-        competition_honors = request.POST.get("competition_honors")
-        school_position = request.POST.get("school_position")
-
-        user_obj = models.UserList.objects.filter(user_id=request.session.get("user_id")).first()
-        update_data = {
-            'user_name': user_name,
-            'age': age,
-            'school': school,
-            'major': major,
-            'gpa': gpa,
-            'professional_skills': professional_skills,
-            'competition_honors': competition_honors,
-            'school_position': school_position
-        }
-        if gpa:
-            update_data['gpa'] = float(gpa)
-        models.UserList.objects.filter(user_id=request.session.get("user_id")).update(**update_data)
-        return JsonResponse({"Code": 0, "msg": "信息修改成功"})
-    return render(request, 'update_user_info.html', {'user_obj': models.UserList.objects.filter(user_id=request.session.get("user_id")).first()})
-
-
-def update_password(request):
-    if request.method == "POST":
         old_pass = request.POST.get("old_pass")
         pass_word = request.POST.get("pass_word")
-        pass_word_1 = request.POST.get("pass_word_1")
         user_obj = models.UserList.objects.filter(user_id=request.session.get("user_id")).first()
-
-        #测试数据传输是否出错
-        print('接收到的原密码:', old_pass)
-        print('接收到的新密码:', pass_word)
-        print('接收到的确认密码:', pass_word_1)
-
         if old_pass != user_obj.pass_word:
-            return JsonResponse({"Code": 1, "msg": "原密码错误"})
-        if pass_word != pass_word_1:
-            return JsonResponse({"Code": 1, "msg": "两次密码输入不一致"})
-        print('接收到的新密码:', pass_word)
-        user_obj.pass_word = pass_word
-        user_obj.save()
-
-        return JsonResponse({"Code": 0, "msg": "密码修改成功"})
-    return render(request, 'update_password.html' ,{'user_obj': models.UserList.objects.filter(user_id=request.session.get("user_id")).first()})
+            return JsonResponse({"Code": 0, "msg": "原密码错误"})
+        else:
+            models.UserList.objects.filter(user_id=request.session.get("user_id")).update(user_name=user_name,
+                                                                                          pass_word=pass_word)
+            return JsonResponse({"Code": 0, "msg": "密码修改成功"})
 
 
 def salary(request):
@@ -334,55 +325,3 @@ def bar(request):
         bar_y.append(key_list.count(x))
     # print(bar_y)
     return JsonResponse({"Code": 0, "bar_x": bar_x, "bar_y":bar_y})
-
-
-def change_status(request):
-    if request.method == "POST":
-        user_id = request.session.get("user_id")
-        job_id = request.POST.get("job_id")
-        status = request.POST.get("status")
-        models.SendList.objects.filter(user_id=user_id, job_id=job_id).update(status=status)
-        return JsonResponse({"Code": 0, "msg": "操作成功"})
-
-import re
-from django.http import JsonResponse
-from .models import JobData
-
-def job_expect(request):
-    if request.method == "POST":
-        job_name = request.POST.get("key_word")
-        city = request.POST.get("city")
-        ret = models.UserExpect.objects.filter(user=request.session.get("user_id"))
-        # print(ret)
-        if ret:
-            ret.update(key_word=job_name, place=city)
-        else:
-            user_obj = models.UserList.objects.filter(user_id=request.session.get("user_id")).first()
-            models.UserExpect.objects.create(user=user_obj, key_word=job_name, place=city)
-        return JsonResponse({"Code": 0, "msg": "操作成功"})
-    else:
-        ret = models.UserExpect.objects.filter(user=request.session.get("user_id")).values()
-        print(ret)
-        if len(ret) != 0:
-            keyword = ret[0]['key_word']
-            place = ret[0]['place']
-        else:
-            keyword = ''
-            place = ''
-        return render(request, "expect.html", locals())
-
-def get_city_job_count(request):
-    # 获取所有城市的职位数据
-    job_data = JobData.objects.all()
-    city_count = {}
-    for job in job_data:
-        if job.place:
-            # 简单处理，假设地点是单一城市名称
-            city = job.place.split()[0]
-            if city in city_count:
-                city_count[city] += 1
-            else:
-                city_count[city] = 1
-    # 转换为 Echarts 所需的格式
-    data = [{"name": city, "value": count} for city, count in city_count.items()]
-    return JsonResponse({"data": data})

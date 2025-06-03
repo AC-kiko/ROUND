@@ -16,9 +16,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, re_path
 from job import views
-from django.urls import path
-from job.views import job_list, get_city_job_count  # 导入新的视图函数
-from django.views.generic import TemplateView
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     re_path('^$', views.login),
@@ -38,21 +36,10 @@ urlpatterns = [
     path('get_recommend/', views.get_recommend, name="get_recommend"),  # 职位推荐
     path('send_list/', views.send_list, name="send_list"),  # 已投递列表
     path('send_page/', views.send_page, name="send_page"),  # 已投递列表
-#    path('pass_page/', views.pass_page, name="pass_page"),
-   # path('up_info/', views.up_info, name="up_info"),  # 修改信息
+    path('pass_page/', views.pass_page, name="pass_page"),
+    path('up_info/', views.up_info, name="up_info"),  # 修改信息
     path('salary/', views.salary, name="salary"),
     path('edu/', views.edu, name="edu"),
     path('bar_page/', views.bar_page, name="bar_page"),
     path('bar/', views.bar, name="bar"),
-
-    path('update_user_info/', views.update_user_info, name='update_user_info'),
-    path('update_password/', views.update_password, name='update_password'),
-
-    path('change_status/', views.change_status, name='change_status'),
-
-
-    path('job_list/', job_list, name='job_list'),
-    path('map/', TemplateView.as_view(template_name='map.html'), name='map'),
-    path('get_city_job_count/', get_city_job_count, name='get_city_job_count'),  # 新增 URL 模式
-
 ]
