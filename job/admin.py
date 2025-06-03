@@ -22,8 +22,8 @@ admin.site.index_title = '招聘后台管理'
 
 
 class UserListAdmin(admin.ModelAdmin):
-    list_display = ('user_id', 'user_name', 'pass_word')  # 列表中显示的字段
-    search_fields = ('user_id', 'user_name')  # 可搜索的字段
+    list_display = ('user_id', 'user_name', 'pass_word', 'grade', 'school', 'major', 'gpa')  # 列表中显示的字段
+    search_fields = ('user_id', 'user_name', 'grade', 'school', 'major')  # 可搜索的字段
     # 设置默认的排序方式，这里按照 id 字段进行排序
     ordering = ['user_id']
 

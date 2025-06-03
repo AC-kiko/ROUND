@@ -24,7 +24,7 @@
                             <cite>{{ request.session.user_name }}</cite>
                         </a>
                         <dl class="layui-nav-child">
-                            <dd><a lay-href="{% url "pass_page" %}">修改密码</a></dd>
+                            <dd><a lay-href="{% url "update_password" %}">修改密码</a></dd>
                             <hr>
                             <dd style="text-align: center;"><a href="{% url "logout" %}">退出系统</a></dd>
                         </dl>
@@ -106,7 +106,12 @@
                             </a>
                             <dl class="layui-nav-child">
                                 <dd>
-                                    <a lay-href="{% url "pass_page" %}">修改密码</a>
+                                    <a lay-href="{% url "update_user_info" %}">修改信息</a>
+                                </dd>
+                            </dl>
+                            <dl class="layui-nav-child">
+                                <dd>
+                                    <a lay-href="{% url "update_password" %}">修改密码</a>
                                 </dd>
                             </dl>
                         </li>

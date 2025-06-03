@@ -36,10 +36,13 @@ urlpatterns = [
     path('get_recommend/', views.get_recommend, name="get_recommend"),  # 职位推荐
     path('send_list/', views.send_list, name="send_list"),  # 已投递列表
     path('send_page/', views.send_page, name="send_page"),  # 已投递列表
-    path('pass_page/', views.pass_page, name="pass_page"),
-    path('up_info/', views.up_info, name="up_info"),  # 修改信息
+#    path('pass_page/', views.pass_page, name="pass_page"),
+   # path('up_info/', views.up_info, name="up_info"),  # 修改信息
     path('salary/', views.salary, name="salary"),
     path('edu/', views.edu, name="edu"),
     path('bar_page/', views.bar_page, name="bar_page"),
     path('bar/', views.bar, name="bar"),
+
+    path('update_user_info/', views.update_user_info, name='update_user_info'),
+    path('update_password/', views.update_password, name='update_password'),
 ]

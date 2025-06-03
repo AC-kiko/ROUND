@@ -112,15 +112,12 @@ def start_spider(request):
         city = request.POST.get("city")
         page = request.POST.get("page")
         role = request.POST.get("role")
-        spider_code = 1  # 改变爬虫状态
         spider_model = models.SpiderInfo.objects.filter(spider_id=1).first()
         # print(spider_model)
         spider_model.count += 1  # 给次数+1
         spider_model.page += int(page)  # 给爬取页数加上选择的页数
         spider_model.save()
-        if role == '猎聘网':
-            # print(key_word,city,page)
-            spider_code = tools.lieSpider(key_word=key_word, city=city, all_page=page)
+        spider_code = tools.spider_engine_choice(engine_id=role,key_word=key_word, city=city, all_page=page) # 调用tools.py进行爬虫（网站id，搜索关键词，城市，页数）
         return JsonResponse({"code": 0, "msg": "爬取完毕!"})
     else:
         return JsonResponse({"code": 1, "msg": "请使用POST请求"})
@@ -265,7 +262,7 @@ def job_expect(request):
 
 
 def get_recommend(request):
-    recommend_list = job_recommend.recommend_by_item_id(request.session.get("user_id"), 9)
+    recommend_list = job_recommend.recommend_by_item_user(request.session.get("user_id"), 9)
     print(recommend_list)
     return render(request, "recommend.html", locals())
 
@@ -283,24 +280,57 @@ def send_list(request):
     else:
         return JsonResponse({"code": 0, "msg": "success", "count": "{}".format(len(send_list)), "data": send_list})
 
-
-def pass_page(request):
-    user_obj = models.UserList.objects.filter(user_id=request.session.get("user_id")).first()
-    return render(request, "pass_page.html", locals())
-
-
-def up_info(request):
+def update_user_info(request):
     if request.method == "POST":
         user_name = request.POST.get("user_name")
+        age = request.POST.get("age")
+        school = request.POST.get("school")
+        major = request.POST.get("major")
+        gpa = request.POST.get("gpa")
+        professional_skills = request.POST.get("professional_skills")
+        competition_honors = request.POST.get("competition_honors")
+        school_position = request.POST.get("school_position")
+
+        user_obj = models.UserList.objects.filter(user_id=request.session.get("user_id")).first()
+        update_data = {
+            'user_name': user_name,
+            'age': age,
+            'school': school,
+            'major': major,
+            'gpa': gpa,
+            'professional_skills': professional_skills,
+            'competition_honors': competition_honors,
+            'school_position': school_position
+        }
+        if gpa:
+            update_data['gpa'] = float(gpa)
+        models.UserList.objects.filter(user_id=request.session.get("user_id")).update(**update_data)
+        return JsonResponse({"Code": 0, "msg": "信息修改成功"})
+    return render(request, 'update_user_info.html', {'user_obj': models.UserList.objects.filter(user_id=request.session.get("user_id")).first()})
+
+
+def update_password(request):
+    if request.method == "POST":
         old_pass = request.POST.get("old_pass")
         pass_word = request.POST.get("pass_word")
+        pass_word_1 = request.POST.get("pass_word_1")
         user_obj = models.UserList.objects.filter(user_id=request.session.get("user_id")).first()
+
+        #测试数据传输是否出错
+        print('接收到的原密码:', old_pass)
+        print('接收到的新密码:', pass_word)
+        print('接收到的确认密码:', pass_word_1)
+
         if old_pass != user_obj.pass_word:
-            return JsonResponse({"Code": 0, "msg": "原密码错误"})
-        else:
-            models.UserList.objects.filter(user_id=request.session.get("user_id")).update(user_name=user_name,
-                                                                                          pass_word=pass_word)
-            return JsonResponse({"Code": 0, "msg": "密码修改成功"})
+            return JsonResponse({"Code": 1, "msg": "原密码错误"})
+        if pass_word != pass_word_1:
+            return JsonResponse({"Code": 1, "msg": "两次密码输入不一致"})
+        print('接收到的新密码:', pass_word)
+        user_obj.pass_word = pass_word
+        user_obj.save()
+
+        return JsonResponse({"Code": 0, "msg": "密码修改成功"})
+    return render(request, 'update_password.html' ,{'user_obj': models.UserList.objects.filter(user_id=request.session.get("user_id")).first()})
 
 
 def salary(request):
